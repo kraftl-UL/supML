@@ -164,6 +164,30 @@ Surprisingly *balcony* is not significant. We remain with the model statistics f
 |
 
 
+### Polynomial Regression Modells
+
+To get a better feeling of how the variables are influencing the dependent variable, we also played around with polynomial regressions. Based on naive estimates of scatter plots of variables on $rent\_full$ we added quadratic terms to a regression model and compared RSMEs. 
+
+We fitted three models:
+First, we choose only variables with rather obvious linear relation to rent_full. All other varibales were accounted for in quadratic terms. 
+The variables of interest were $dist\_to\_lake$, $Noise\_max$, $Anteil\_auslaend$, $Avg\_age$, $anteil\_efh$, $Micro\_rating$.
+The model performed worse than the normal linear one from above. 
+
+With the second model we planned to determine the influence of all variables we used quardatic before to determine the significance of variables with no linear connection. 
+We found an  infinitesimally small $R^2$ value of only 1%
+
+In the third model we fitted all in quadratic form. The performance was worse than before as well.
+
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Multi-polynomial Model1|`451.67`            |'0.55'            |
+|Multi-polynomial Model2|`666.92`            |'0.01'            
+|Multi-polynomial Model3|`495.78`            |'0.45'            |
+|
+
+
+
 ### Lasso Regression 
 Next we focused on the Lasso regression. Abbreviated for Least Absolute Shrinkage and Selection Operator, Lasso serves as a model selection device to enhance the prediction accuracy and interpretability of a model. Operationally, it minimizes the sum of squared residuals, subject to a penalty on the absolute size of the regression coefficients, which is prosa for 
 
@@ -174,7 +198,7 @@ $$ for $\gamma = 0.1/log(N)$ and $N$ the number of observations. The tuning para
 We split our data with a 80:20 ratio into training and test set.
 For the $\lambda_{min} we only get rid of 2 variables for our $\lambda_{min}$: floor26 and floor18. 
 
-In case we would decide for a larger weight for the penalty term, we would lose more variables, which would correspond to shifting further to the right within the following graph. 
+In case we would decide for a larger weight for the penalty term, we would lose more variables, which would correspond to shifting further to the right within the following graph. The number of lines in a certain cross section at a certain $\lambda$ represents the number of variables still in the model.
 
 Plotting the Lasso regression:
 
@@ -200,11 +224,17 @@ $$ for $\gamma = 0.1/log(N)$ and $N$ the number of observations as above.
 Again, we split our data with a 80:20 ratio into training and test set. Here, the tuning parameter $\lambda$ has a larger weight than for the lasso penalty term. Once more, we obtain it by cross validation. $\lambda_{min} =44.7354$.
 
 With *ridge regression* we lose the variable floors26.
-When predicting on the test set we have performance measures as follows: 
+
+Plotting the ridge regression, we note that values are approaching more assymptotically than with lasso which corresponds to the algorithm's theory. 
+
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/ridge_shrinkage.png?raw=true)
+
+When predicting on the test set we have slightly worse performance measures as with lasso:
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Ridge|`385.00`            |'0.67'            |
+|Ridge|`385.19`            |'0.67'            |
 |
 
 ### Random Forrest - Bagging 

@@ -452,6 +452,8 @@ ggplot(df, aes(x= Micro_rating, y= rent_full)) +
 # modeling
 ##########
 
+
+###########################################################################
 ####### Multi-linear model with k-fold Cross Validation ##################################################
 
 
@@ -470,13 +472,64 @@ lm_10 <- as.data.frame(print(model))
 
 summary(model)
 
+###############################################################
+########### Polynomial-Regression model ######################
+
+colnames(df_LM_kfold)
+
+#create test and training set
+set.seed(123)
+training.samples <- df_LM_kfold$rent_full %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- df_LM_kfold[training.samples, ]
+test.data <- df_LM_kfold[-training.samples, ]
+
+model <- lm(rent_full ~  I(dist_to_lake^2)+ I(Noise_max^2)+ I(Anteil_auslaend^2)+ 
+              I(Avg_age^2)+ I(anteil_efh^2)+ I(Micro_rating^2)+ msregion +
+              area + parking_indoor + rooms + wgh_avg_sonnenklasse_per_egid + Avg_size_household
+            + avg_anzhl_geschosse +dist_to_4G + dist_to_5G + dist_to_haltst + dist_to_highway +
+              dist_to_main_stat + dist_to_river + balcony + home_type + parking_outside + year_built + elevator
+            + superm_pix_count_km2,   data = train.data)
+
+model
+
+predictions <- model %>% predict(test.data)
+# Model performance
+Poly_Reg <- data.frame(
+  RMSE = RMSE(predictions, test.data$rent_full),
+  R2 = R2(predictions, test.data$rent_full)
+)
+
+model2 <- lm(rent_full ~  I(dist_to_lake^2)+ I(Noise_max^2)+ I(Anteil_auslaend^2)+ 
+               I(Avg_age^2)+ I(anteil_efh^2)+ I(Micro_rating^2), data = train.data)
+
+predictions <- model2 %>% predict(test.data)
+# Model performance
+Poly_Reg2 <- data.frame(
+  RMSE = RMSE(predictions, test.data$rent_full),
+  R2 = R2(predictions, test.data$rent_full))
+
+model3 <- lm(rent_full ~  I(dist_to_lake^2)+ I(Noise_max^2)+ I(Anteil_auslaend^2)+ 
+               I(Avg_age^2)+ I(anteil_efh^2)+ I(Micro_rating^2)+ msregion +
+               I(area^2) + I(parking_indoor^2) + I(rooms^2) + I(wgh_avg_sonnenklasse_per_egid^2) + I(Avg_size_household^2)
+             + avg_anzhl_geschosse + I(dist_to_4G^2) + I(dist_to_5G^2) + I(dist_to_haltst^2) + I(dist_to_highway^2) +
+               I(dist_to_main_stat^2) + I(dist_to_river^2) + I(balcony^2) + home_type + I(parking_outside^2) + I(year_built^2) + elevator
+             + I(superm_pix_count_km2^2),   data = train.data)
+
+predictions <- model3 %>% predict(test.data)
+# Model performance
+Poly_Reg3 <- data.frame(
+  RMSE = RMSE(predictions, test.data$rent_full),
+  R2 = R2(predictions, test.data$rent_full))
+
 
 ####### Lasso regression - k-fold CV ##################################################
+
 
 set.seed(123)
 training.samples <- df_LM_kfold$rent_full %>%
   createDataPartition(p = 0.8, list = FALSE)
-train.data <- df_LM_kfold[training.samples, ]
+train.data  <- df_LM_kfold[training.samples, ]
 test.data <- df_LM_kfold[-training.samples, ]
 
 # Predictor variables
@@ -495,8 +548,7 @@ cv$lambda.min
 
 # Fit the final model on the training data
 model <- glmnet(x, y, alpha = 1, lambda = cv$lambda.min)
-
-# Display regression coefficients
+# Dsiplay regression coefficients
 beta <- coef(model)
 
 Lasso_Coeff <- as.data.frame(as.matrix(beta))
@@ -504,7 +556,6 @@ Lasso_Coeff <- as.data.frame(as.matrix(beta))
 # Make predictions on the test data
 x.test <- model.matrix(rent_full ~., test.data)[,-1]
 predictions <- model %>% predict(x.test) %>% as.vector()
-
 # Model performance metrics
 data.frame(
   RMSE = RMSE(predictions, test.data$rent_full),
@@ -547,7 +598,7 @@ cv$lambda.min
 # Fit the final model on the training data
 model <- glmnet(x, y, alpha = 0, lambda = cv$lambda.min)
 # Dsiplay regression coefficients
-ridge <- coef(model)
+ridge <- coef(model) ##### Welche Coef sind 0???
 
 Ridge_Coeff <- as.data.frame(as.matrix(ridge))
 
@@ -563,67 +614,40 @@ result <-data.frame(
 
 str(result)
 
-Lasso=na.omit(train.data)
-x=model.matrix(rent_full~.,Lasso)[,-1]
-y=as.matrix(Lasso$rent_full)
-lasso.mod =glmnet(x,y, alpha =0)
-cf=coef(lasso.mod)
+Ridge=na.omit(train.data)
+x=model.matrix(rent_full~.,Ridge)[,-1]
+y=as.matrix(Ridge$rent_full)
+ridge.mod =glmnet(x,y, alpha =0)
+cf=coef(ridge.mod)
 par(mfrow = c(1,1), mar = c(3.5,3.5,2,1), mgp = c(2, 0.6, 0), cex = 0.8, las = 1)
-plot(lasso.mod, "lambda", label = TRUE)
+plot(ridge.mod, "lambda", label = TRUE)
 
-
-
-####### Bagging - RandomForest ########################################################
+####### RandomForest with CV ########################################################
 
 df_rf <- subset(df, select = -c(GDENAMK, GDENR, msregion))
+set.seed(123)
+training.samples <- df_LM_kfold$rent_full %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- df_rf[training.samples, ]
+test.data <- df_rf[-training.samples, ]
 
-str(df_rf)
 
-# Create features and target
-X <- df_rf[, -which(names(df_rf) == "rent_full")] 
-y <- df_rf$rent_full
+# Fit the model on the training set
+set.seed(123)
 
-# Split data into training and test sets
-index <- createDataPartition(y, p=0.75, list=FALSE)
-X_train <- X[ index, ]
-X_test <- X[-index, ]
-y_train <- y[index]
-y_test<-y[-index]
+model_rf <- train(
+  rent_full ~., data = train.data, method = "rf",
+  trControl = trainControl("cv", number = 10)
+)
 
-# Train the model 
-regr <- randomForest(x = X_train, y = y_train , maxnodes = 5000, ntree = 10)
-
-plot(regr)
-
-# Make prediction
-predictions <- predict(regr, X_test)
-
-result <- X_test
-result['rent_full'] <- y_test
-result['prediction']<-  predictions
-
-plot(result$rent_full, result$prediction, col = c("red", "blue"))
-
-summ <- (result["rent_full"] - result["prediction"])^2
-RMSE_rf <- sqrt(mean(summ$rent_full))
-RMSE_rf
-
-############Loop to find the best bag-tree
-
-w <- c()
-
-for (i in seq(10,30,10)){
-  regr <- randomForest(x = X_train, y = y_train , maxnodes = 5000, ntree = i)
-  predictions <- predict(regr, X_test)
-  result <- X_test
-  result['rent_full'] <- y_test
-  result['prediction']<-  predictions
-  summ <- (result["rent_full"] - result["prediction"])^2
-  RMSE_rf[i] <- sqrt(mean(summ$rent_full))
-}
-
-w <- as.data.frame(w)
-plot(w)
+str(train.data)
+# Best tuning parameter mtry
+model_rf$bestTune
+# Make predictions on the test data
+predictions <- model_rf %>% predict(test.data)
+head(predictions)
+# Compute the average prediction error RMSE
+RMSE(predictions, test.data$medv)
 
 
 ####### RandomForest  ########################################################
