@@ -9,7 +9,7 @@
 ## Overview
 1. Introduction and Motivation
 2. Data Cleaning
-3. Modeling
+3. Modelling
 4. Comparison and Conclusion
 
 
@@ -22,6 +22,8 @@ In greater detail we first dove into linear and logistic regression models, lear
 Accompanying the theoretical set-up of the course we enjoyed (and endured) a practical application of those supervised ML models. 
 
 The project aims to train a decent model and predict rent prices of Switzerland's housing market based on a variety of variables.
+
+To derive at a decent model we compare at least four different ones and apply cross validation for resampling from our data for at least two models. 
 
 In this paper we follow along our path of code and display central thoughts of why we proceded as we did. This includes some descriptive statistics, graph interpretations and derived measures of aforementioned. 
 Additionally, we briefly explain the techniques we utilized to underline our comprehensive understanding of the models' conceptual baselines. 
@@ -38,7 +40,7 @@ We want to run our model on a holistic set of data and therefore aim towards a r
 
 Obviously, we cannot discuss each and every discussion on which variables to delete and which not due to the given limited extent of this paper. However, we attempt to be as detailed as possible. 
 
-#### <u>War on redundant variables
+#### <u>War on redundant variables <u>
 
 We need to understand that many of the collected observations have not been filled entirely by the creators of the observations. 
 Does an NA in *bath* entail that the flat has no bathroom? There rather is a bathroom, but maybe not three as three bathrooms would have been valuable to mention when uploading housing file.
@@ -50,7 +52,7 @@ We assume many of those variables not to be properly filled by the observations'
 
 We also delete the subcategories of *Mirco_rating*, but leave itself. This leaves us with 51 variables. 
 
-#### <u> Topic of Multicollinearity
+#### <u> Topic of Multicollinearity <u>
 
 Two of the variables being highly correlated induces the possibiliy of multicollinearity.
 We check for collinearity amongst the remainder variables. 
@@ -71,13 +73,13 @@ Ultimately the following variables remain:
 *GDENAMK*, *GDENR*,  *KTKZ*, *area*  , *balcony*,  *elevator*,*floors*,  *home_type*,  *msregion*, *parking_indoor* , *parking_outside*,  *rent_full*, *rooms* , *year_built*,  *Micro_rating*, *wgh_avg_sonnenklasse_per_egid*, *Anteil_auslaend*,  *Avg_age*, *Avg_size_household*, *Noise_max*,  *anteil_efh*, *avg_anzhl_geschosse*, *dist_to_4G*,  *dist_to_5G*, *dist_to_haltst*  , *dist_to_highway* , *dist_to_lake*, *dist_to_main_stat*,  *dist_to_train_stat* , *superm_pix_count_km2*, *dist_to_river*  and *na_count*.  
 
 
-#### <u> War on NAs 
+#### <u> War on NAs <u>
 
 However, with those 31 variables we still have 18 with NAs. 
 
-Then, we tailor the way to substitute the missing values for each variable - mostly based on an idea of the variable's distribution (histograms, boxplots, unique values, common sense) .
+Then, we we tailor the way to substitute the missing values for each variable - mostly based on an idea of the variable's distribution (histograms, boxplots, unique values, common sense) .
 
-Tackling sparse observations, we delete these rows as we would create synthetic rows by imputing. Also, we delete rows which contain NAs in area and rooms, since we seek to keep the risk low to be biased, especially in the field regarding the variables of rooms and area.
+Tackling sparse observations, we delete these rows as we would create synthetic rows by imputing. Also, we delete rows which contain NAs in area and rooms, since we seek to keep the risk low to be biased, especially in the regarding the variables  of rooms and area.
 
 For discrete values as *balcony*, *elevator*, *parking_indoor*, *parking_outside* we consider an NA to be 0 as it is likely to not type anything when creating an observation, than typing 0 for non-existent paramters.
 For missing *floor* values we considered the median. 
@@ -96,12 +98,63 @@ This was a short overview of methods and cherry-picking of variables how we hand
 
 We end the cleaning process with a dataset of 88921 observations and 31 variables. 
 
-#### <u> Descriptive statistics
-
-@ Dominik put in some of your screenshots. 
+#### <u> Descriptive statistics <u>
 
 
 
 
 
 
+
+## 3 Modelling 
+
+After having analyzed the data, we then continue with the actual modelling. 
+We tested a multi-linear model, lasso and ridge regression, bagging and a random forrest model.
+
+#### <u> Multi-linear Model <u>
+
+We fitted a linear model all variables (except the *GDENR* and *KTKZ* as they would entail too many additional regressors, exceeding our computational power) with the $lm()$ method. This leaves us with 27 independent variables to determine $Y = rent\_ full$. The model we're fitting therefore is of the form
+
+$$
+\ Y = \beta_0 + \beta_1 X_1 + \beta_2 X_2 + ... + + \beta_{27} X_{27} + \epsilon
+$$
+
+ $X_i$ are vectors of length $88'855$. Some $X_i$ for $i \in \{floors, home\_type, msregion, avg\_anzahl\_geschosse\}$ are discrete regressors due to their factor nature. Some of those turn out to be not significant ( e.g. *avg_anzahl_geschosse*(4,5,6), *msregion*68, *floors*(1,2,3,10,11)). 
+
+We result in a model with 175 regressors of which only 32 are not significant on a 1% level. 
+
+Surprisingly *balcony* is not significant. We remain with the model statistics for later comparison Residual Mean Squared Error and the R$^2$ for explainability of the models variance. More information on the resulting model can be checked by running the code. 
+
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Multi-linear Model|`385.26`            |' 0.68'            |
+|
+
+
+#### <u> Lasso Regression <u>
+Next we focused on the Lasso regression. Abbreviated for Least Absolute Shrinkage and Selection Operator, Lasso serves as a model selection device to enhance the prediction accuracy and interpretability. Operationally, it minimizes the sum of squared residuals, subject to a penalty on the absolute size of the regression coefficients, which is prosa for 
+
+$$
+min_{\beta}\{ \sum_{i=1}^N(Y_i-\gamma-\sum_{j=1}^pX_{ij}\beta_j)^2 + \lambda \sum_{j=1}^p|\beta_j| \} 
+$$
+for $\gamma = 0.1/log(N)$ and $N$ the number of observations. The $\lambda$ is obtained by cross validation. In our very test run, we obtained a $\lambda_{min} =0.0539$.
+
+We split our data with a 80:20 ratio into training and test set.
+Unfortunlately, we only get rid of 2 variables for our $\lambda_{min}$: floor26 and floor18. 
+
+
+Plotting the Lasso regression, we can understand the regression even better. 
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/lasso_shrinkage.png?raw=true)
+
+The colored lines represent the values taken by a different coefficients in the model. $\lambda$ in the x-axis as the weight for the regularization term. As lambda approaches zero, the loss function of the model approaches the standard  OLS model from above. With lambda increasing we set more and more terms to (almost) zero. 
+
+
+However, we receive prediction statistics of 
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Lasso|`378.12`            |' 0.68'            |
+|
+
+#### <u> Lasso Regression <u>
