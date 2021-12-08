@@ -40,7 +40,7 @@ We want to run our model on a holistic set of data and therefore aim towards a r
 
 Obviously, we cannot discuss each and every discussion on which variables to delete and which not due to the given limited extent of this paper. However, we attempt to be as detailed as possible. 
 
-#### <u>War on redundant variables <u>
+### War on redundant variables 
 
 We need to understand that many of the collected observations have not been filled entirely by the creators of the observations. 
 Does an NA in *bath* entail that the flat has no bathroom? There rather is a bathroom, but maybe not three as three bathrooms would have been valuable to mention when uploading housing file.
@@ -52,7 +52,7 @@ We assume many of those variables not to be properly filled by the observations'
 
 We also delete the subcategories of *Mirco_rating*, but leave itself. This leaves us with 51 variables. 
 
-#### <u> Topic of Multicollinearity <u>
+###  Topic of Multicollinearity 
 
 Two of the variables being highly correlated induces the possibiliy of multicollinearity.
 We check for collinearity amongst the remainder variables. 
@@ -73,7 +73,7 @@ Ultimately the following variables remain:
 *GDENAMK*, *GDENR*,  *KTKZ*, *area*  , *balcony*,  *elevator*,*floors*,  *home_type*,  *msregion*, *parking_indoor* , *parking_outside*,  *rent_full*, *rooms* , *year_built*,  *Micro_rating*, *wgh_avg_sonnenklasse_per_egid*, *Anteil_auslaend*,  *Avg_age*, *Avg_size_household*, *Noise_max*,  *anteil_efh*, *avg_anzhl_geschosse*, *dist_to_4G*,  *dist_to_5G*, *dist_to_haltst*  , *dist_to_highway* , *dist_to_lake*, *dist_to_main_stat*,  *dist_to_train_stat* , *superm_pix_count_km2*, *dist_to_river*  and *na_count*.  
 
 
-#### <u> War on NAs <u>
+### War on NAs 
 
 However, with those 31 variables we still have 18 with NAs. 
 
@@ -98,11 +98,43 @@ This was a short overview of methods and cherry-picking of variables how we hand
 
 We end the cleaning process with a dataset of 88921 observations and 31 variables. 
 
-#### <u> Descriptive statistics <u>
+### Descriptive statistics 
+
+In the following we will take a more detailed look into the variables we are using for our predictive models. During the process of data cleaning, we already took a first look into the data and focused on outliers of the variables. 
+
+Now, we aim to understand the data in greater detail. Therefore, we will investigate some variables representatively, and share the insights that appear to be valuable.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/KTKZ~count.png?raw=true)
+
+Looking at the distribution of cantons within the dataset shows that by far most of the apartments are advertised in the canton of Zurich. Bern and Vaud have many observations, too. These three cantons together make up a larger portion than 40% of all advertisements. Together with the next canton, Aargau, these apartments make 50% of all advertisements. 
+
+In combination with a boxplot over the rent prices per canton, this gives further insight into the distribution of rent prices within the data.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/Box_KTKZ~rent_full.png?raw=true)
+
+We can see that the cantons of Geneva, Zug and Zurich tend to be the most expensive cantons in Switzerland. Additionally, we note that the average rent prices per canton lie rather close together.
+
+As we saw in the correlation plot from above, area and room seem to have a strong impact on the rent price. Therefore, we plot both these variables pairwise.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/area~rent_full.png?raw=true)
+
+Even though we note heteroscedasticity, rent price and the area of an apartment are positively correlated. It seems like when reaching a certain point which is around 200m2, the impact of area on the price remains positive but decreases. This could mean that bigger apartments are more available in areas where rent prices are lower. Given the graph from above, these might be more rural than urban areas.
+
+ The relation between rooms and the rent prices is similar to the one from above.
+ 
+ Common sense explains that apartments with more rooms tend to be bigger and tend to be more expensive. Interestingly, as with the area of the apartment, the impact of the number of rooms on the rent price tends to decrease from a certain number of rooms.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/rooms~rent_full.png?raw=true)
+
+Next, we look at the relation of Micro_rating and the rent price. In the first place, we assumed the Micro_rating has an impact on the rent price. 
+The low number of NAs and the fact that we already deal with a rating element here, lead to this assumption. 
+
+However, the graph points to a different situation. We cannot note a clear correlation here but rather observe heteroscedasticity here, too.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/Micro_rating~rent_full.png?raw=true)
 
 
-
-
+After having thoroughly examined the data set, we got a good impression of what the dataset is all about. Now we are prepared to continue with training of our models.
 
 
 
@@ -111,7 +143,7 @@ We end the cleaning process with a dataset of 88921 observations and 31 variable
 After having analyzed the data, we then continue with the actual modelling. 
 We tested a multi-linear model, lasso and ridge regression, bagging and a random forrest model.
 
-#### <u> Multi-linear Model <u>
+### Multi-linear Model 
 
 We fitted a linear model all variables (except the *GDENR* and *KTKZ* as they would entail too many additional regressors, exceeding our computational power) with the $lm()$ method. This leaves us with 27 independent variables to determine $Y = rent\_ full$. The model we're fitting therefore is of the form
 
@@ -128,11 +160,11 @@ Surprisingly *balcony* is not significant. We remain with the model statistics f
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Multi-linear Model|`385.26`            |' 0.68'            |
+|Multi-linear Model|`385.26`            |'0.68'            |
 |
 
 
-#### <u> Lasso Regression <u>
+### Lasso Regression 
 Next we focused on the Lasso regression. Abbreviated for Least Absolute Shrinkage and Selection Operator, Lasso serves as a model selection device to enhance the prediction accuracy and interpretability of a model. Operationally, it minimizes the sum of squared residuals, subject to a penalty on the absolute size of the regression coefficients, which is prosa for 
 
 $$
@@ -154,10 +186,10 @@ The colored lines represent the values taken by a different coefficients in the 
 However, we receive prediction statistics of 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Lasso|`378.12`            |' 0.68'            |
+|Lasso|`378.12`            |'0.68'            |
 |
 
-#### <u> Ridge Regression <u>
+### Ridge Regression 
 
 Without loosing too many variables with Lasso, we can apply a ridge regression as well. The only difference between both models is the penalty term. It minimizes the sum of squared residuals, subject to a penalty term - not on the absolute size - but on the squared values of the regression coefficients: 
 
@@ -172,9 +204,9 @@ When predicting on the test set we have performance measures as follows:
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Ridge|`385.00`            |' 0.67'            |
+|Ridge|`385.00`            |'0.67'            |
 |
 
-#### <u> Random Forrest - Bagging <u>
+### Random Forrest - Bagging 
 
 Text text text
