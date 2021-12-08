@@ -133,18 +133,18 @@ Surprisingly *balcony* is not significant. We remain with the model statistics f
 
 
 #### <u> Lasso Regression <u>
-Next we focused on the Lasso regression. Abbreviated for Least Absolute Shrinkage and Selection Operator, Lasso serves as a model selection device to enhance the prediction accuracy and interpretability. Operationally, it minimizes the sum of squared residuals, subject to a penalty on the absolute size of the regression coefficients, which is prosa for 
+Next we focused on the Lasso regression. Abbreviated for Least Absolute Shrinkage and Selection Operator, Lasso serves as a model selection device to enhance the prediction accuracy and interpretability of a model. Operationally, it minimizes the sum of squared residuals, subject to a penalty on the absolute size of the regression coefficients, which is prosa for 
 
 $$
 min_{\beta}\{ \sum_{i=1}^N(Y_i-\gamma-\sum_{j=1}^pX_{ij}\beta_j)^2 + \lambda \sum_{j=1}^p|\beta_j| \} 
-$$
-for $\gamma = 0.1/log(N)$ and $N$ the number of observations. The $\lambda$ is obtained by cross validation. In our very test run, we obtained a $\lambda_{min} =0.0539$.
+$$ for $\gamma = 0.1/log(N)$ and $N$ the number of observations. The tuning parameter $\lambda$ controls the relative impact of penalty term on the regression coefficient estimates. We obtain it by cross validation. In our very test run, we obtained a $\lambda_{min} =0.0539$.
 
 We split our data with a 80:20 ratio into training and test set.
-Unfortunlately, we only get rid of 2 variables for our $\lambda_{min}$: floor26 and floor18. 
+For the $\lambda_{min} we only get rid of 2 variables for our $\lambda_{min}$: floor26 and floor18. 
 
+In case we would decide for a larger weight for the penalty term, we would lose more variables, which would correspond to shifting further to the right within the following graph. 
 
-Plotting the Lasso regression, we can understand the regression even better. 
+Plotting the Lasso regression:
 
 ![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/lasso_shrinkage.png?raw=true)
 
@@ -157,4 +157,24 @@ However, we receive prediction statistics of
 |Lasso|`378.12`            |' 0.68'            |
 |
 
-#### <u> Lasso Regression <u>
+#### <u> Ridge Regression <u>
+
+Without loosing too many variables with Lasso, we can apply a ridge regression as well. The only difference between both models is the penalty term. It minimizes the sum of squared residuals, subject to a penalty term - not on the absolute size - but on the squared values of the regression coefficients: 
+
+$$
+min_{\beta}\{ \sum_{i=1}^N(Y_i-\gamma-\sum_{j=1}^pX_{ij}\beta_j)^2 + \lambda \sum_{j=1}^p\beta_j^2 \} 
+$$ for $\gamma = 0.1/log(N)$ and $N$ the number of observations as above. 
+
+Again, we split our data with a 80:20 ratio into training and test set. Here, the tuning parameter $\lambda$ has a larger weight than for the lasso penalty term. Once more, we obtain it by cross validation. $\lambda_{min} =44.7354$.
+
+With *ridge regression* we lose the variable floors26.
+When predicting on the test set we have performance measures as follows: 
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Ridge|`385.00`            |' 0.67'            |
+|
+
+#### <u> Random Forrest - Bagging <u>
+
+Text text text
