@@ -27,7 +27,7 @@ library(boot)
 
 
 getwd()
-#setwd("C:/Users/Buerolzb2.t027/Documents/R/Supervised_ML")
+setwd("C:/Users/kraft/OneDrive/Desktop/Bewerbung/UL/3_HS_2021/Supervised Learning/Final Project")
 list.files()
 list.files(pattern=".csv")
 
@@ -35,6 +35,10 @@ list.files(pattern=".csv")
 
 data_basis <- as.data.frame(read.csv("training.csv"))
 df <- data_basis
+
+#reorder
+df = df %>% relocate("rent_full", .after = last_col())
+
 dim(df)
 str(df)
 #View(df)
@@ -49,6 +53,7 @@ str(df)
 # excluded, since we can assume missing data in some cases rather than scarce features
 na_count <- sapply(df, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
+na_count_start = na_count
 
 
 # NA count gives 10 features with no data at all. These will be deleted first
@@ -59,6 +64,7 @@ df <- subset(df, select = -c(which(na_count == 90001)))
 #update na_count
 na_count <-sapply(df, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
+
 
 # Next, we delete all features with less than 5000 entries, after checking each
 # of the features individually
@@ -541,7 +547,7 @@ cv$lambda.min
 # Fit the final model on the training data
 model <- glmnet(x, y, alpha = 0, lambda = cv$lambda.min)
 # Dsiplay regression coefficients
-ridge <- coef(model) ##### Welche Coef sind 0???
+ridge <- coef(model)
 
 Ridge_Coeff <- as.data.frame(as.matrix(ridge))
 
@@ -651,7 +657,109 @@ for(i in 1:25) {
 }
 
 ###########################################################################
+############################
+# final prediction 
+
+
+X_test = as.data.frame(read.csv("X_test.csv"))
+df1 = X_test
+
+# move ID to last position
+df1 <- subset(df1, select=c(2:100,1))
+
+na_count <- sapply(df1, function(y) sum(length(which(is.na(y)))))
+na_count <- data.frame(na_count)
 
 
 
+# Next, we delete all features with less than 5000 entries, after checking each
+# of the features individually
+df1 <- subset(df1, select = -c(which(na_count_start > 85001)))
+
+
+df1 <- subset(df1, select = -c(Micro_rating_NoiseAndEmission,
+                             Micro_rating_Accessibility, 
+                             Micro_rating_DistrictAndArea, 
+                             Micro_rating_SunAndView, 
+                             Micro_rating_ServicesAndNature))
+
+
+df1 <- subset(df1, select = -c(descr, newly_built, year, quarter_specific, address,
+                               date, lat, lon, area_useable, cabletv, month, quarter_general, 
+                               quarter_specific, year, apoth_pix_count_km2, 
+                               restaur_pix_count_km2, avg_bauperiode, dist_to_school_1, 
+                               geb_wohnnutz_total, wgh_avg_sonnenklasse_per_egid.1, kids_friendly, 
+                               max_guar_down_speed))
+
+
+discrete_vars = c("balcony", "elevator", "parking_indoor", "parking_outside")
+df1[discrete_vars][is.na(df1[discrete_vars])] = 0
+
+
+df1$floors[is.na(df1$floors)] = median(df$floors, na.rm = TRUE)
+
+
+df1$year_built[is.na(df1$year_built)] = 2016
+
+df1$dist_to_lake[is.na(df1$dist_to_lake) | df1$dist_to_lake > 16000] = median(df$dist_to_lake, na.rm = TRUE)
+
+df1$dist_to_main_stat[is.na(df1$dist_to_main_stat)] = median(df$dist_to_main_stat, na.rm = TRUE)
+
+df1$Avg_size_household[is.na(df1$Avg_size_household)] = mean(df$Avg_size_household, na.rm = TRUE)
+
+df1$Anteil_auslaend[is.na(df1$Anteil_auslaend) | df1$Anteil_auslaend == 1] = mean(df$Anteil_auslaend, na.rm = TRUE)
+
+df1$Avg_age[df1$Avg_age < 23] = median(df$Avg_age, na.rm = TRUE)
+df1$Avg_age[df1$Avg_age > 58] = median(df$Avg_age, na.rm = TRUE)
+df1$Avg_age[is.na(df1$Avg_age)] = mean(df$Avg_age, na.rm = TRUE)
+
+df1$avg_anzhl_geschosse[is.na(df1$avg_anzhl_geschosse)] = round(median(df$avg_anzhl_geschosse, na.rm = TRUE))
+
+df1$anteil_efh[is.na(df1$anteil_efh)] = 0
+
+df1$dist_to_haltst[is.na(df1$dist_to_haltst)] = median(df$dist_to_haltst, na.rm = TRUE)
+
+df1$wgh_avg_sonnenklasse_per_egid[is.na(df1$wgh_avg_sonnenklasse_per_egid)] = mean(df$wgh_avg_sonnenklasse_per_egid, na.rm = TRUE)
+
+
+sort(unique(df1$rooms))
+df1$rooms[is.na(df1$rooms)] = round_any(df1$area[is.na(df1$rooms)] / mean_area_per_room, 0.5)
+df1$rooms = round_any(df1$rooms, 0.5)
+# still NAs in rooms
+df1$rooms[is.na(df1$rooms)] = median(df$rooms, na.rm = TRUE)
+
+
+df1$area[is.na(df1$area)] = round_any(df1$rooms[is.na(df1$area)] / mean_rooms_per_area, 1)
+
+df1$avg_anzhl_geschosse = round_any(df1$avg_anzhl_geschosse, 1)
+
+na_count <- sapply(df1, function(y) sum(length(which(is.na(y)))))
+na_count <- data.frame(na_count)
+
+
+
+# Make factors for relevant features that are characters
+df1$home_type <- as.factor(df1$home_type)
+df1$GDENR = as.factor(df1$GDENR)
+df1$KTKZ = as.factor(df1$KTKZ)
+df1$msregion = as.factor(df1$msregion)
+df1$floors = as.factor(df1$floors)
+df1$avg_anzhl_geschosse = as.factor(df1$avg_anzhl_geschosse)
+
+# cleaning test set done.
+########################
+
+
+#predicting test set
+####################
+
+
+
+
+our_pred <- predict(model1, newdata=X_test)
+our_pred <- as.data.frame(our_pred)
+our_pred$ID <- seq.int(index(our_pred))
+our_pred <- our_pred[,c(2,1)]
+our_pred <- our_pred%>%rename(rent=our_pred)
+write.csv(our_pred, "Y_test.csv", row.names = FALSE)
 
