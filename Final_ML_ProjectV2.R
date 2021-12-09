@@ -24,6 +24,9 @@ library(lmvar)
 library(corpcor)
 library(mctest)
 library(boot)
+library(randomForestExplainer)
+
+#install.packages("addYourPackage")
 
 
 getwd()
@@ -306,6 +309,9 @@ df$wgh_avg_sonnenklasse_per_egid[is.na(df$wgh_avg_sonnenklasse_per_egid)] = mean
 
 
 
+
+
+
 na_count <-sapply(df, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
 
@@ -359,8 +365,6 @@ df$rooms[df$rooms<1.0] = 1.0
 # we get rid of those by rounding to the nearest .5
 sort(unique(df$rooms))
 df$rooms = round_any(df$rooms, 0.5)
-
-
 
 
 # area
@@ -479,7 +483,7 @@ summary(model)
 
 predictions <- model %>% predict(test.data)
 # Model performance
-Poly_Reg <- data.frame(
+Reg_stat <- data.frame(
   RMSE = RMSE(predictions, test.data$rent_full),
   R2 = R2(predictions, test.data$rent_full)
 )
@@ -506,7 +510,7 @@ summary(model2)
 
 predictions2 <- model2 %>% predict(test.data)
 # Model performance
-Poly_Reg <- data.frame(
+Reg_stat <- data.frame(
   RMSE = RMSE(predictions2, test.data$rent_full),
   R2 = R2(predictions2, test.data$rent_full)
 )
@@ -561,6 +565,8 @@ predictions <- model3 %>% predict(test.data)
 Poly_Reg3 <- data.frame(
   RMSE = RMSE(predictions, test.data$rent_full),
   R2 = R2(predictions, test.data$rent_full))
+
+
 
 
 ####### Lasso regression - k-fold CV ##################################################
@@ -664,7 +670,38 @@ plot(ridge.mod, "lambda", label = TRUE)
 
 
 
-####### RandomForest ########################################################
+####### RandomForest with CV ########################################################
+
+df_rf <- subset(df, select = -c(GDENAMK, GDENR, msregion))
+set.seed(123)
+training.samples <- df_LM_kfold$rent_full %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train.data  <- df_rf[training.samples, ]
+test.data <- df_rf[-training.samples, ]
+
+# very long computational time (~20h), but best model. 
+# therefore commented out
+
+
+# Fit the model on the training set
+#set.seed(123)
+
+#model_rf <- train(
+#  rent_full ~., data = train.data, method = "rf",
+#  trControl = trainControl("cv", number = 10))
+
+#str(train.data)
+# Best tuning parameter mtry
+#model_rf$bestTune
+# Make predictions on the test data
+#predictions <- model_rf %>% predict(test.data)
+#head(predictions)
+# Compute the average prediction error RMSE
+#RMSE(predictions, test.data$medv)
+
+
+####### RandomForest  ########################################################
+
 
 df_rf <- subset(df, select = -c(GDENAMK, GDENR, msregion, floors, avg_anzhl_geschosse))
 
@@ -686,8 +723,12 @@ set.seed(123)
 regr <- randomForest(x = X_train, y = y_train, maxnodes = 5000, ntree = 140)
 
 plot(regr)
-
 regr
+
+min_depth_frame <- min_depth_distribution(regr)
+plot_min_depth_distribution(min_depth_frame)
+plot_min_depth_distribution(min_depth_frame, mean_sample = "relevant_trees", k = 8)
+
 
 # Make prediction
 predictions <- predict(regr, X_test)
@@ -696,33 +737,53 @@ result <- X_test
 result['rent_full'] <- y_test
 result['prediction']<-  predictions
 
-plot(result$rent_full, result$prediction, col = c("red", "blue"))
+plot(result$rent_full, result$prediction)
 
-
+ggplot(result, aes( x = seq.int(nrow(result)), y = rent_full)) +
+  geom_point() + geom_point(aes(x = seq.int(nrow(result))), y = result$predicitions)
 
 summ <- (result["rent_full"] - result["prediction"])^2
 RMSE_rf <- sqrt(mean(summ$rent_full))
 RMSE_rf
 
+############Loop to find the best rf
 
+#RMSE_rf <- c()
 
+#for (i in seq(10,150,10)){
+#  regr <- randomForest(x = X_train, y = y_train , maxnodes = 5000, ntree = i)
+#  predictions <- predict(regr, X_test)
+#  result <- X_test
+#  result['rent_full'] <- y_test
+#  result['prediction']<-  predictions
+#  summ <- (result["rent_full"] - result["prediction"])^2
+#  RMSE_rf[i] <- sqrt(mean(summ$rent_full))
+#}
 
+#RMSE_rf <- as.data.frame(RMSE_rf)
+#RMSE_rf <- write.csv(RMSE_rf, "RMSE_rf.csv")
+#plot(RMSE_rf)
 
+############################
+
+# rf graph
+#min_depth_frame <- min_depth_distribution(regr)
+#plot_min_depth_distribution(min_depth_frame)
+#plot_min_depth_distribution(min_depth_frame, mean_sample = "relevant_trees", k = 8)
+
+#plot_multi_way_importance(regr, size_measure = "no_of_nodes")
+
+#plot_importance_ggpairs(regr)
 
 ###########################################################################
-###########################################################################
-###########################################################################
+############################
 # final prediction 
 
 
-X_test = as.data.frame(read.csv("X_test.csv"))
-df1 = X_test
+XX_test = as.data.frame(read.csv("X_test.csv"))
+df1 = XX_test
 
-# clean Testset according to cleaning process of train set. 
-##########################################################
-
-
-# move ID to last position to set columns same with training set
+# move ID to last position
 df1 <- subset(df1, select=c(2:100,1))
 
 na_count <- sapply(df1, function(y) sum(length(which(is.na(y)))))
@@ -741,6 +802,7 @@ df1 <- subset(df1, select = -c(Micro_rating_NoiseAndEmission,
                                Micro_rating_SunAndView, 
                                Micro_rating_ServicesAndNature))
 
+
 df1 <- subset(df1, select = -c(descr, newly_built, year, quarter_specific, address,
                                date, lat, lon, area_useable, cabletv, month, quarter_general, 
                                quarter_specific, year, apoth_pix_count_km2, 
@@ -748,60 +810,50 @@ df1 <- subset(df1, select = -c(descr, newly_built, year, quarter_specific, addre
                                geb_wohnnutz_total, wgh_avg_sonnenklasse_per_egid.1, kids_friendly, 
                                max_guar_down_speed))
 
-# fill NAs as above
 
-# discrete values
 discrete_vars = c("balcony", "elevator", "parking_indoor", "parking_outside")
 df1[discrete_vars][is.na(df1[discrete_vars])] = 0
 
-#floors
-df1$floors[is.na(df1$floors)] = median(as.numeric(df$floors), na.rm = TRUE)
 
-# year_built
+df1$floors[is.na(df1$floors)] = median(as.numeric(df$floors), na.rm = TRUE)
+unique(df1$floors)
+unique(df$floors)
+
+
 df1$year_built[is.na(df1$year_built)] = 2016
 
-#dist_to_lake
 df1$dist_to_lake[is.na(df1$dist_to_lake) | df1$dist_to_lake > 16000] = median(df$dist_to_lake, na.rm = TRUE)
 
-# dist_to_main_stat
 df1$dist_to_main_stat[is.na(df1$dist_to_main_stat)] = median(df$dist_to_main_stat, na.rm = TRUE)
 
-# Avg_size_household
 df1$Avg_size_household[is.na(df1$Avg_size_household)] = mean(df$Avg_size_household, na.rm = TRUE)
 
-# Anteil_auslaend
 df1$Anteil_auslaend[is.na(df1$Anteil_auslaend) | df1$Anteil_auslaend == 1] = mean(df$Anteil_auslaend, na.rm = TRUE)
 
-# Avg_age
 df1$Avg_age[df1$Avg_age < 23] = median(df$Avg_age, na.rm = TRUE)
 df1$Avg_age[df1$Avg_age > 58] = median(df$Avg_age, na.rm = TRUE)
 df1$Avg_age[is.na(df1$Avg_age)] = mean(df$Avg_age, na.rm = TRUE)
 
-# avg_anzhl_geschosse
 df1$avg_anzhl_geschosse[is.na(df1$avg_anzhl_geschosse)] = round(median(as.numeric(df$avg_anzhl_geschosse), na.rm = TRUE))
-df1$avg_anzhl_geschosse = round_any(df1$avg_anzhl_geschosse, 1)
 
-# anteil_efh
 df1$anteil_efh[is.na(df1$anteil_efh)] = 0
 
-# dist_to_haltst
 df1$dist_to_haltst[is.na(df1$dist_to_haltst)] = median(df$dist_to_haltst, na.rm = TRUE)
 
-# wgh_avg_sonnenklasse_per_egid
 df1$wgh_avg_sonnenklasse_per_egid[is.na(df1$wgh_avg_sonnenklasse_per_egid)] = mean(df$wgh_avg_sonnenklasse_per_egid, na.rm = TRUE)
 
-# rooms
+
 sort(unique(df1$rooms))
 df1$rooms[is.na(df1$rooms)] = round_any(df1$area[is.na(df1$rooms)] / mean_area_per_room, 0.5)
 df1$rooms = round_any(df1$rooms, 0.5)
 # still NAs in rooms
 df1$rooms[is.na(df1$rooms)] = median(df$rooms, na.rm = TRUE)
 
-# area
+
 df1$area[is.na(df1$area)] = round_any(df1$rooms[is.na(df1$area)] / mean_rooms_per_area, 1)
 
+df1$avg_anzhl_geschosse = round_any(df1$avg_anzhl_geschosse, 1)
 
-# all NAs replaced
 na_count <- sapply(df1, function(y) sum(length(which(is.na(y)))))
 na_count <- data.frame(na_count)
 
@@ -822,13 +874,18 @@ df1$avg_anzhl_geschosse = as.factor(df1$avg_anzhl_geschosse)
 #predicting test set
 ####################
 
+df_rf_test <- subset(df1, select = -c(GDENAMK, GDENR, msregion, floors, avg_anzhl_geschosse))
+na_count <- sapply(df_rf_test, function(y) sum(length(which(is.na(y)))))
+
+str(df_rf_test)
+str(X_train)
 
 
-
-our_pred <- predict(model1, newdata=X_test)
+our_pred <- predict(regr,  df_rf_test)
 our_pred <- as.data.frame(our_pred)
-our_pred$ID <- seq.int(index(our_pred))
-our_pred <- our_pred[,c(2,1)]
-our_pred <- our_pred%>%rename(rent=our_pred)
-write.csv(our_pred, "Y_test.csv", row.names = FALSE)
+predictions1 <- as.data.frame(round(our_pred$our_pred,1))
+predictions1$ID <- df_rf_test$ID
+predictions1 <- subset(predictions1, select = c(2,1))
+colnames(predictions1 ) <- c("ID", "rent")
 
+write.csv(predictions1, "Y_test.csv", row.names = FALSE)
