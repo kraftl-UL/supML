@@ -271,7 +271,7 @@ The difference between Bagging and RandomForest is mainly that in Bagging all of
 With Bagging having all predictors used at all times it tends to overfitting. Therefore, the function graph can "adapt" better or more 
 accurately to the observations, which should lead to an overfit at a certain point. 
 
-In a first run, we applied the code from the randomForest package to bypass the BlackBox caret for once. 
+In a first run, we applied the code from the RandomForest package to bypass the BlackBox caret for once. 
 Later, however, we reverted to caret, since the optimal value for mtry can be calculated more easily with this package. 
  
 In general, the main thing you need to do to avoid overfitting in a random forest is optimize a tuning parameter (mtry) 
@@ -281,17 +281,21 @@ Furthermore, increasing the size of the forest improves forecast accuracy.
 However, there are normally diminishing benefits after you reach a few hundreds of trees.
 
 For fine-tuning of ntrees we have been looping over the parameter. We figured that when considering more than 140 trees, we only achieved marginal performance improvements.
-Now display the model statistics for a short selection of tuning-paramters.
+This is also displayed here.
+
+![enter image description here](https://github.com/kraftl-UL/supML/blob/main/images/rf_performance_improv.jpeg?raw=true)
+
+Now display the model statistics for a short selection of tuning-parameters.
 
 
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Random Forest1 (max_nodes = 5000, ntrees = 10)|`346.88`            |'0.69'            |
-|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
-|Random Forest3 (max_nodes = 5000, ntrees = 200)|`336.36`            |'0.76'            |
-|Random Forest4 (max_nodes = 15000, ntrees = 140)|`330.00`            |'0.76'            |
-|Random Forest5 (max_nodes = 5000, ntrees = 140) (bagging: mtry = 27)|`339.74`            |'0.75'            |
+|Random Forest1 (max_nodes = 5000, ntrees = 10)|`346.88`            |` 0.69`             |
+|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |` 0.75`             |
+|Random Forest3 (max_nodes = 5000, ntrees = 200)|`336.36`            |` 0.76`             |
+|Random Forest4 (max_nodes = 15000, ntrees = 140)|`330.00`            |` 0.76`             |
+|Random Forest5 (max_nodes = 5000, ntrees = 140) (bagging: mtry = 27)|`339.74`            |` 0.75`             |
 
 
 RandomForst(3,4,5) took extensive computational time due to the rise in max_nodes or ntrees. We made those calculations to figure whether an increase of nods would improve the model substantially. This was not the case.
@@ -307,10 +311,10 @@ After having trained and evaluated all models based on the size of error terms, 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
 |Multi-linear Model|`378.09`            |`0.68`            |
-|Multi-polynomial Model1|`451.67`            |'0.55'            |
-|Lasso|`378.12`            |'0.68'            |
-|Ridge|`385.19`            |'0.67'            |
-|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
+|Multi-polynomial Model1|`451.67`            |` 0.55`             |
+|Lasso|`378.12`            |` 0.68`             |
+|Ridge|`385.19`            |` 0.67`             |
+|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |` 0.75`             |
 
 
 With the random forest we receive not only the lowest Residual Mean Squared Error, but the highest explainability of the prediction's variance, too. 
