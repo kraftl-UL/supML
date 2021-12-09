@@ -880,7 +880,7 @@ na_count <- sapply(df_rf_test, function(y) sum(length(which(is.na(y)))))
 str(df_rf_test)
 str(X_train)
 
-
+set.seeed(123)
 our_pred <- predict(regr,  df_rf_test)
 our_pred <- as.data.frame(our_pred)
 predictions1 <- as.data.frame(round(our_pred$our_pred,1))
