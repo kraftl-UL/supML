@@ -9,7 +9,7 @@
 ## Overview
 1. Introduction and Motivation
 2. Data Cleaning
-3. Modelling
+3. Modeling
 4. Comparison and Conclusion
 
 
@@ -17,7 +17,7 @@
 
 In the course Supervised Machine Learning we (the authors) have gained valueable insights into various spheres of supervised machine learning (ML). 
 
-In greater detail we first dove into linear and logistic regression models, learned to assess model accuracy and evaluate models based on metrics like Confusion Matrix and its implicated metrics like Precision, Recall and the  ROC curve. We later looked into sampling strategies like cross validation and bootstrapping to handle large datasets more efficiently. Model selection procedures like lasso and ridge regression led us further to the decision tree techniques of bagging, random forests and boosting.
+In greater detail we first dove into linear and logistic regression models, learned to assess model accuracy and evaluate models based on metrics like Confusion Matrix and its implicated metrics like Precision, Recall and the  ROC curve. We later looked into sampling strategies like cross validation and bootstrapping to handle large datasets more efficiently. Model selection procedures like lasso and ridge regression led us further to the decision tree techniques of random forests.
 
 Accompanying the theoretical set-up of the course we enjoyed (and endured) a practical application of those supervised ML models. 
 
@@ -38,7 +38,7 @@ The dataset is not clean in its original form and requires a decent amount of cl
 
 We want to run our model on a holistic set of data and therefore aim towards a reduced dataset with relevant variables, predominantly meaningful observations and entries in every cell.
 
-Obviously, we cannot discuss each and every discussion on which variables to delete and which not due to the given limited extent of this paper. However, we attempt to be as detailed as possible. 
+Obviously, we cannot have each and every discussion on which variables to delete and which not due to the given limited extent of this paper. However, we attempt to be as detailed as possible. 
 
 ### War on redundant variables 
 
@@ -61,7 +61,7 @@ We check for collinearity amongst the remainder variables.
 
 We note several highly correlated variables as a supermarket and restaurant per km2 counter or the month and quarter of the time the observation was created. There even exist variables holding the same information twice as the *sonnenklasse* descriptor. We delete amongst the aforementioned or *avg_bauperiode* and *dist_to_school_1* 20 more variables. Which leaves us with 31. 
 
-Multicollinearity appear not that intensively anymore as before. Strong correlation remains with variables that are obvious as with *rooms* and *area* or variables that will be omitted in the final model as *GDENR* and *msregion*, which are representatives of the observations's location. We also note the high correlation between *area* and the dependent variable *rent_full*.
+Multicollinearity appears not that intensively anymore as before. Strong correlation remains with variables that are obvious as with *rooms* and *area* or variables that will be omitted in the final model as *GDENR* and *msregion*, which are representatives of the observations's location. We also note the high correlation between *area* and the dependent variable *rent_full*.
 
 ![Collinearity after deleting redundant variables](https://github.com/kraftl-UL/supML/blob/main/images/corrplot_v2.png?raw=true)
 
@@ -77,20 +77,20 @@ Ultimately the following variables remain:
 
 However, with those 31 variables we still have 18 with NAs. 
 
-Then, we we tailor the way to substitute the missing values for each variable - mostly based on an idea of the variable's distribution (histograms, boxplots, unique values, common sense) .
+Then, we tailor the way to substitute the missing values for each variable - mostly based on an idea of the variable's distribution (histograms, boxplots, unique values, common sense).
 
-Tackling sparse observations, we delete these rows as we would create synthetic rows by imputing. Also, we delete rows which contain NAs in area and rooms, since we seek to keep the risk low to be biased, especially in the regarding the variables  of rooms and area.
+Tackling sparse observations, we delete these rows as we would create synthetic rows by imputing. Also, we delete rows which contain NAs in area and rooms, since we seek to keep the risk low to be biased, especially in the regarding the variables of rooms and area.
 
 For discrete values as *balcony*, *elevator*, *parking_indoor*, *parking_outside* we consider an NA to be 0 as it is likely to not type anything when creating an observation, than typing 0 for non-existent paramters.
 For missing *floor* values we considered the median. 
 
 From external research we know that there doesn't exist any location in Switzerland with a distance of more than 16km to the next lake. Everything above this distance in our dataset - concerning *dist_to_lake* - is set to NA and later all NAs are replaced by the median, which is ~1206m.
 
-We also assume the average age of people living in a hectare around a certain ovservation can be lower than 18 as before adulthood people cannot rent an appartment or flat. The average of those people in a certain area will be even higher. Same applies for the upper egde of *Avg_age*. So we first reduce the top and bottom outliers by more appropriate values of 25 & 58 and fill the remaining NAs with the (more representative) median value, which is 41.84 years.
+We also assume the average age of people living in a hectare around a certain ovservation is very unlikely to be lower than 18 as before adulthood people cannot rent an appartment or flat. Even if we take the chance of having babies into account, the likelihood of all people in an area of one hectar being younger than 18 is very low. The average of those people in a certain area will be even higher. Same applies for the upper egde of *Avg_age*. So we first reduce the top and bottom outliers by more appropriate values of 25 & 58 and fill the remaining NAs with the (more representative) median value, which is 41.84 years.
 
 Observations with *area* values lower than 6.0m2 were handled as outliers and deleted.
 
-As we deleted the few observations with NAs in both, *area* and *rooms*, we refill *area*  depending on the number of rooms and a average room size computed based on observations with both entires. Vice versa for NAs in *rooms*. 
+As we deleted the few observations with NAs in both, *area* and *rooms*, we refill *area*  depending on the number of rooms and a average room size computed based on observations with both entries. Vice versa for NAs in *rooms*. 
 
 In *rooms* there were many obviously wrong entries (e.g. 1.6, 2.4, 3.1 or 5.4). We rounded those to the nearest .5 value. 
 
@@ -138,10 +138,10 @@ After having thoroughly examined the data set, we got a good impression of what 
 
 
 
-## 3 Modelling 
+## 3 Modeling 
 
-After having analyzed the data, we then continue with the actual modelling. 
-We tested a multi-linear model, lasso and ridge regression, bagging and a random forrest model.
+After having analyzed the data, we then continue with the actual modeling. 
+We tested a multi-linear model, lasso and ridge regression, bagging and a random forest model.
 
 ### Multi-linear Model 
 
@@ -157,7 +157,7 @@ We result in a model with 175 regressors of which only 32 are not significant on
 
 
 
-Surprisingly *balcony* is not significant. We remain with the model statistics for later comparison Residual Mean Squared Error and the R$^2$ for explainability of the models variance. 
+Surprisingly, *balcony* is not significant. We remain with the model statistics for later comparison Residual Mean Squared Error and the R$^2$ for explainability of the models variance. 
 
 
 For better model fitting we utilized 5-fold cross validation as a sampling strategy. In short, this means, that we devided the data set into 5 equally sized parts, trained a model with the first four and evaluated it on the fifth. 
@@ -186,7 +186,7 @@ We received worse results.
 
 
 
-### Polynomial Regression Modells
+### Polynomial Regression Models
 
 To get a better feeling of how the variables are influencing the dependent variable, we also played around with polynomial regressions. Based on naive estimates of scatter plots of variables on $rent\_full$ we added quadratic terms to a regression model and compared RSMEs. 
 
@@ -258,7 +258,7 @@ When predicting on the test set we have slightly worse performance measures as w
 |Ridge|`385.19`            |`0.67`            |
 
 
-### Random Forrest 
+### Random Forest 
 
 
 One of the most widely used and powerful machine learning approaches is the Random Forest algorithm. 
@@ -298,14 +298,14 @@ Now display the model statistics for a short selection of tuning-parameters.
 |Random Forest5 (max_nodes = 5000, ntrees = 140) (bagging: mtry = 27)|`339.74`            |` 0.75`             |
 
 
-RandomForst(3,4,5) took extensive computational time due to the rise in max_nodes or ntrees. We made those calculations to figure whether an increase of nods would improve the model substantially. This was not the case.
+Random Forest(3,4,5) took extensive computational time due to the rise in max_nodes or ntrees. We made those calculations to figure whether an increase of nods would improve the model substantially. This was not the case.
 Therefore we conclude the best random forest due to the best mix of RMSE, R$^2$ and computational time to be Random Forest2.
 
 
 ## Comparison and Conclusion
 
 
-After having trained and evaluated all models based on the size of error terms, we 
+After having trained and evaluated all models based on the size of error terms, we decide to make the prediction by using Random Forest2.
 
 
 |                |RMSE                         |R$^2$|
