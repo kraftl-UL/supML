@@ -155,13 +155,35 @@ $$
 
 We result in a model with 175 regressors of which only 32 are not significant on a 1% level. 
 
-Surprisingly *balcony* is not significant. We remain with the model statistics for later comparison Residual Mean Squared Error and the R$^2$ for explainability of the models variance. More information on the resulting model can be checked by running the code. 
+
+
+Surprisingly *balcony* is not significant. We remain with the model statistics for later comparison Residual Mean Squared Error and the R$^2$ for explainability of the models variance. 
+
+
+For better model fitting we utilized 5-fold cross validation as a sampling strategy. In short, this means, that we devided the data set into 5 equally sized parts, trained a model with the first four and evaluated it on the fifth. 
+This process is repeated 5 times, such that each set was the test set exactly once. An average error term is calculated for each training and testing lap.
+Ultimately, the RMSE of the model is calculated as the average error of the five validation processes from cross validation.
+
+More information on the resulting model can be checked by running the code. 
 
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Multi-linear Model|`385.26`            |'0.68'            |
+|Multi-linear Model|`378.09`            |`0.68`            |
 |
+
+
+We attempted a similar model with forward selection as well. 
+With forward selection, we attempt to choose significant variables for the model. We fit a model with a first variable, the one that returns the lowest Mean Squared Error.
+Then a second variable is added, again selecting the model that gives again the lowest RMSE when controlling for both variables in combination. 
+Due to this variable selection method firward selection is also called to be "greedy".
+We received worse results.
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Multi-linear Model|`471.28`            |`0.51`            |
+|
+
 
 
 ### Polynomial Regression Modells
@@ -237,6 +259,76 @@ When predicting on the test set we have slightly worse performance measures as w
 |Ridge|`385.19`            |'0.67'            |
 |
 
-### Random Forrest - Bagging 
+### Random Forrest 
 
-Text text text
+
+One of the most widely used and powerful machine learning approaches is the Random Forest algorithm. 
+It's a sort of bagging that is used with decision trees. 
+It entails continually using various bootstrapped subsets of the data and averaging the models to create multiple separate decision tree models from a single training data set. 
+Each tree is constructed independently of the others. 
+
+Random forests can be used for classification tasks (predicting a categorical variable), but regression models (predicting a continuous variable), too.
+The difference between Bagging and RandomForest is mainly that in Bagging all of the predictors are considered for each node for a split. 
+With Bagging having all predictors used at all times it tends to overfitting. Therefore, the function graph can "adapt" better or more 
+accurately to the observations, which should lead to an overfit at a certain point. 
+
+In a first run, we applied the code from the randomForest package to bypass the BlackBox caret for once. 
+Later, however, we reverted to caret, since the optimal value for mtry can be calculated more easily with this package. 
+ 
+In general, the main thing you need to do to avoid overfitting in a random forest is optimize a tuning parameter (mtry) 
+that governs the number of features that are randomly chosen to develop each tree from the bootstrapped data. 
+Typically, this is done using k-fold cross-validation, where k lays between 5 and 10. 
+Furthermore, increasing the size of the forest improves forecast accuracy. 
+However, there are normally diminishing benefits after you reach a few hundreds of trees.
+
+For fine-tuning of ntrees we have been looping over the parameter. We figured that when considering more than 140 trees, we only achieved marginal performance improvements.
+Now display the model statistics for a short selection of tuning-paramters.
+
+
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Random Forest1 (max_nodes = 5000, ntrees = 10)|`346.88`            |'0.69'            |
+|
+|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
+|
+|Random Forest3 (max_nodes = 5000, ntrees = 200)|`336.36`            |'0.76'            |
+|
+|Random Forest4 (max_nodes = 15000, ntrees = 140)|`330.00`            |'0.76'            |
+|
+|Random Forest5 (max_nodes = 5000, ntrees = 140) (bagging: mtry = 27)|`339.74`            |'0.75'            |
+|
+
+
+RandomForst(3,4,5) took extensive computational time due to the rise in max_nodes or ntrees. We made those calculations to figure whether an increase of nods would improve the model substantially. This was not the case.
+Therefore we conclude the best random forest due to the best mix of RMSE, R$^2$ and computational time to be Random Forest2.
+
+
+## Comparison and Conclusion
+
+
+After having trained and evaluated all models based on the size of error terms, we 
+
+
+|                |RMSE                         |R$^2$|
+|----------------|-------------------------------|-----------------------------|
+|Multi-linear Model|`378.09`            |`0.68`            |
+|
+|Multi-polynomial Model1|`451.67`            |'0.55'            |
+|
+|Lasso|`378.12`            |'0.68'            |
+|
+|Ridge|`385.19`            |'0.67'            |
+|
+|Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
+|
+
+
+With the random forest we receive not only the lowest Residual Mean Squared Error, but the highest explainability of the prediction's variance, too. 
+
+Therefore, we use the random forest to predict the original holdout set X_test.
+The predicted values can be found in the corresponding [repository](https://github.com/kraftl-UL/supML). 
+
+This concludes our project and paper. We thank all reader who made it down here and wish a good remaining esemster. 
+
+
