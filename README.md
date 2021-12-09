@@ -170,7 +170,7 @@ More information on the resulting model can be checked by running the code.
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
 |Multi-linear Model|`378.09`            |`0.68`            |
-|
+
 
 
 We attempted a similar model with forward selection as well. 
@@ -182,7 +182,7 @@ We received worse results.
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
 |Multi-linear Model|`471.28`            |`0.51`            |
-|
+
 
 
 
@@ -203,10 +203,9 @@ In the third model we fitted all in quadratic form. The performance was worse th
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Multi-polynomial Model1|`451.67`            |'0.55'            |
-|Multi-polynomial Model2|`666.92`            |'0.01'            
-|Multi-polynomial Model3|`495.78`            |'0.45'            |
-|
+|Multi-polynomial Model1|`451.67`            |`0.55`            |
+|Multi-polynomial Model2|`666.92`            |`0.01`            
+|Multi-polynomial Model3|`495.78`            |`0.45`            |
 
 
 
@@ -232,8 +231,8 @@ The colored lines represent the values taken by a different coefficients in the 
 However, we receive prediction statistics of 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Lasso|`378.12`            |'0.68'            |
-|
+|Lasso|`378.12`            |`0.68`           |
+
 
 ### Ridge Regression 
 
@@ -256,8 +255,8 @@ When predicting on the test set we have slightly worse performance measures as w
 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
-|Ridge|`385.19`            |'0.67'            |
-|
+|Ridge|`385.19`            |`0.67`            |
+
 
 ### Random Forrest 
 
@@ -289,15 +288,10 @@ Now display the model statistics for a short selection of tuning-paramters.
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
 |Random Forest1 (max_nodes = 5000, ntrees = 10)|`346.88`            |'0.69'            |
-|
 |Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
-|
 |Random Forest3 (max_nodes = 5000, ntrees = 200)|`336.36`            |'0.76'            |
-|
 |Random Forest4 (max_nodes = 15000, ntrees = 140)|`330.00`            |'0.76'            |
-|
 |Random Forest5 (max_nodes = 5000, ntrees = 140) (bagging: mtry = 27)|`339.74`            |'0.75'            |
-|
 
 
 RandomForst(3,4,5) took extensive computational time due to the rise in max_nodes or ntrees. We made those calculations to figure whether an increase of nods would improve the model substantially. This was not the case.
@@ -313,15 +307,10 @@ After having trained and evaluated all models based on the size of error terms, 
 |                |RMSE                         |R$^2$|
 |----------------|-------------------------------|-----------------------------|
 |Multi-linear Model|`378.09`            |`0.68`            |
-|
 |Multi-polynomial Model1|`451.67`            |'0.55'            |
-|
 |Lasso|`378.12`            |'0.68'            |
-|
 |Ridge|`385.19`            |'0.67'            |
-|
 |Random Forest2 (max_nodes = 5000, ntrees = 140)|`335.97`            |'0.75'            |
-|
 
 
 With the random forest we receive not only the lowest Residual Mean Squared Error, but the highest explainability of the prediction's variance, too. 
@@ -329,6 +318,6 @@ With the random forest we receive not only the lowest Residual Mean Squared Erro
 Therefore, we use the random forest to predict the original holdout set X_test.
 The predicted values can be found in the corresponding [repository](https://github.com/kraftl-UL/supML). 
 
-This concludes our project and paper. We thank all reader who made it down here and wish a good remaining esemster. 
+This concludes our project and paper. We thank all readers kept on reading until down here and wish a good remaining semester. 
 
 
